@@ -11,48 +11,41 @@
     <button id="toggleBtn" style="font-size:20px;" disabled>Đang kết nối...</button>
 
 <script>
-    // ======== ĐỔI IP này thành IP máy chạy Flask ========
-    const BACKEND_URL = "http://192.168.1.62:5000"; // đổi theo IP máy bạn
+    const BACKEND_URL = "http://192.168.1.62:5000"; // IP máy chạy Flask
 
     const statusEl = document.getElementById("status");
-    const btnEl = document.getElementById("toggleBtn");
+    const toggleBtn = document.getElementById("toggleBtn");
 
-    // Kết nối Socket.IO
+    // Kết nối tới server qua Socket.IO
     const socket = io(BACKEND_URL);
 
     socket.on("connect", () => {
         console.log("✅ Đã kết nối server");
-        btnEl.disabled = false;
-        btnEl.innerText = "Bật/Tắt LED";
-    });
-
-    socket.on("disconnect", () => {
-        console.log("⚠ Mất kết nối server");
-        statusEl.innerText = "MẤT KẾT NỐI";
-        btnEl.disabled = true;
-        btnEl.innerText = "Đang kết nối...";
+        toggleBtn.disabled = false;
+        toggleBtn.innerText = "Bật/Tắt LED";
+        statusEl.innerText = "ĐANG ĐỒNG BỘ...";
     });
 
     socket.on("led_state", (data) => {
         console.log("Nhận trạng thái:", data);
-        statusEl.innerText = data.on ? "BẬT ✅" : "TẮT ❌";
-        btnEl.innerText = data.on ? "Tắt LED" : "Bật LED";
+        statusEl.innerText = data.on ? "🔆 BẬT" : "💤 TẮT";
     });
 
-    // Nút gửi toggle
-    btnEl.addEventListener("click", async () => {
+    socket.on("disconnect", () => {
+        console.warn("🚫 Mất kết nối server!");
+        statusEl.innerText = "⚠️ MẤT KẾT NỐI";
+        toggleBtn.disabled = true;
+        toggleBtn.innerText = "Đang kết nối...";
+    });
+
+    toggleBtn.addEventListener("click", async () => {
         try {
-            const response = await fetch(`${BACKEND_URL}/toggle`, {
-                method: "POST"
-            });
-            if (!response.ok) throw new Error("Server trả về lỗi!");
-            console.log("Đã gửi lệnh toggle");
-        } catch (err) {
-            console.error("Lỗi khi gửi toggle:", err);
+            const response = await fetch(`${BACKEND_URL}/toggle`, { method: "POST" });
+            console.log("Đã gửi lệnh toggle:", response.status);
+        } catch (error) {
+            console.error("Lỗi khi gửi toggle:", error);
         }
     });
 </script>
-
 </body>
 </html>
-
