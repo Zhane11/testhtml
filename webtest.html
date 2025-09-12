@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Điều khiển LED (Test)</title>
+    <!-- Dùng CDN socket.io (chỉ cần một dòng này thôi) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body style="text-align:center; font-family: Arial;">
+    <h1>💡 Điều khiển LED (Realtime)</h1>
+    <p>Trạng thái: <b id="status">{{ "BẬT" if state else "TẮT" }}</b></p>
+    <form action="/toggle" method="post">
+        <button type="submit" style="font-size:20px;">
+            {{ "Tắt" if state else "Bật" }} LED
+        </button>
+    </form>
+
+<script>
+    const socket = io();
+    socket.on("led_state", function(data) {
+        console.log("Nhận trạng thái:", data);
+        document.getElementById("status").innerText = data.on ? "BẬT" : "TẮT";
+    });
+</script>
+
+</body>
+</html>
