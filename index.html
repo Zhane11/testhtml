@@ -1,40 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Điều khiển LED (Test)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body style="text-align:center; font-family: Arial;">
     <h1>💡 Điều khiển LED (Realtime)</h1>
-    <p>Trạng thái: <b id="status">ĐANG KẾT NỐI...</b></p>
-    <button id="toggleBtn" style="font-size:20px;">Bật/Tắt LED</button>
+    <p>Trạng thái: <b id="status">⏳ ĐANG KẾT NỐI...</b></p>
+    <button id="toggleBtn" style="font-size:20px;" disabled>Đang kết nối...</button>
 
 <script>
-    // === Đổi IP_NGUON thành IP của máy đang chạy Flask ===
-    const BACKEND_URL = "http://192.168.1.100:5000";  // LAN
-    // Nếu bạn dùng ngrok/public tunnel thì sửa thành URL đó
+    // ======== ĐỔI IP này thành IP máy chạy Flask ========
+    const BACKEND_URL = "http://192.168.1.100:5000"; // đổi theo IP máy bạn
 
-    // Kết nối tới Socket.IO server
+    const statusEl = document.getElementById("status");
+    const btnEl = document.getElementById("toggleBtn");
+
+    // Kết nối Socket.IO
     const socket = io(BACKEND_URL);
 
     socket.on("connect", () => {
         console.log("✅ Đã kết nối server");
+        btnEl.disabled = false;
+        btnEl.innerText = "Bật/Tắt LED";
     });
 
-    socket.on("led_state", function(data) {
+    socket.on("disconnect", () => {
+        console.log("⚠ Mất kết nối server");
+        statusEl.innerText = "MẤT KẾT NỐI";
+        btnEl.disabled = true;
+        btnEl.innerText = "Đang kết nối...";
+    });
+
+    socket.on("led_state", (data) => {
         console.log("Nhận trạng thái:", data);
-        document.getElementById("status").innerText = data.on ? "BẬT" : "TẮT";
+        statusEl.innerText = data.on ? "BẬT ✅" : "TẮT ❌";
+        btnEl.innerText = data.on ? "Tắt LED" : "Bật LED";
     });
 
-    // Gửi lệnh toggle khi nhấn nút
-    document.getElementById("toggleBtn").addEventListener("click", async () => {
+    // Nút gửi toggle
+    btnEl.addEventListener("click", async () => {
         try {
             const response = await fetch(`${BACKEND_URL}/toggle`, {
                 method: "POST"
             });
-            console.log("Đã gửi lệnh toggle:", response.status);
-        } catch (error) {
-            console.error("Lỗi khi gửi toggle:", error);
+            if (!response.ok) throw new Error("Server trả về lỗi!");
+            console.log("Đã gửi lệnh toggle");
+        } catch (err) {
+            console.error("Lỗi khi gửi toggle:", err);
         }
     });
 </script>
