@@ -2,26 +2,42 @@
 <html>
 <head>
     <title>Điều khiển LED (Test)</title>
-    <!-- Dùng CDN socket.io (chỉ cần một dòng này thôi) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body style="text-align:center; font-family: Arial;">
     <h1>💡 Điều khiển LED (Realtime)</h1>
-    <p>Trạng thái: <b id="status">{{ "BẬT" if state else "TẮT" }}</b></p>
-    <form action="/toggle" method="post">
-        <button type="submit" style="font-size:20px;">
-            {{ "Tắt" if state else "Bật" }} LED
-        </button>
-    </form>
+    <p>Trạng thái: <b id="status">ĐANG KẾT NỐI...</b></p>
+    <button id="toggleBtn" style="font-size:20px;">Bật/Tắt LED</button>
 
 <script>
-    const socket = io();
+    // === Đổi IP_NGUON thành IP của máy đang chạy Flask ===
+    const BACKEND_URL = "http://192.168.1.100:5000";  // LAN
+    // Nếu bạn dùng ngrok/public tunnel thì sửa thành URL đó
+
+    // Kết nối tới Socket.IO server
+    const socket = io(BACKEND_URL);
+
+    socket.on("connect", () => {
+        console.log("✅ Đã kết nối server");
+    });
+
     socket.on("led_state", function(data) {
         console.log("Nhận trạng thái:", data);
         document.getElementById("status").innerText = data.on ? "BẬT" : "TẮT";
     });
+
+    // Gửi lệnh toggle khi nhấn nút
+    document.getElementById("toggleBtn").addEventListener("click", async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/toggle`, {
+                method: "POST"
+            });
+            console.log("Đã gửi lệnh toggle:", response.status);
+        } catch (error) {
+            console.error("Lỗi khi gửi toggle:", error);
+        }
+    });
 </script>
 
 </body>
-
 </html>
